@@ -1,0 +1,65 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Typography (BEM): .text--h1 ... .text--caption */
+@layer components {
+  .text {
+    @apply font-regular text-text-primary;
+  }
+  .text--h1 {
+    @apply font-bold text-h1;
+  }
+  .text--h2 {
+    @apply font-semibold text-h2;
+  }
+  .text--h3 {
+    @apply font-semibold text-h3;
+  }
+  .text--h4 {
+    @apply font-medium text-h4;
+  }
+  .text--body-lg {
+    @apply font-regular text-body-lg;
+  }
+  .text--body-md {
+    @apply font-regular text-body-md;
+  }
+  .text--body-sm {
+    @apply font-regular text-body-sm;
+  }
+  .text--caption {
+    @apply font-regular text-caption;
+  }
+  .text--secondary {
+    @apply text-text-secondary;
+  }
+
+  /* Surfaces */
+  .screen {
+    @apply flex-1 bg-background;
+  }
+  .card {
+    @apply rounded-card border border-border bg-background p-4;
+  }
+  .card--surface {
+    @apply border-0 bg-surface;
+  }
+
+  /* Buttons */
+  .button {
+    @apply items-center justify-center rounded-button px-6 py-4;
+  }
+  .button--primary {
+    @apply bg-purple;
+  }
+  .button--secondary {
+    @apply border border-border bg-background;
+  }
+  .button__label {
+    @apply font-semibold text-h4 text-background;
+  }
+  .button__label--secondary {
+    @apply text-text-primary;
+  }
+}

@@ -62,4 +62,55 @@
   .button__label--secondary {
     @apply text-text-primary;
   }
+
+  /* Language card */
+  .language-card {
+    @apply mb-3 min-h-[76px] flex-row items-center rounded-[20px] border border-border bg-background px-4;
+  }
+  .language-card--selected {
+    @apply border-[1.5px] border-purple bg-[#F5F3FF];
+  }
+  .language-card--disabled {
+    @apply opacity-50;
+  }
+  .language-card__flag {
+    @apply h-[52px] w-[52px] items-center justify-center overflow-hidden rounded-full border border-border bg-background;
+  }
+  .language-card__body {
+    @apply ml-4 flex-1;
+  }
+  .language-card__check {
+    @apply h-8 w-8 items-center justify-center rounded-full bg-deep-purple;
+  }
+
+  /* Search field */
+  .search-field {
+    @apply h-[56px] flex-row items-center rounded-full border border-border bg-surface px-5;
+  }
+
+  /* Home: today's plan card and rows */
+  .plan-card {
+    @apply rounded-[24px] border border-border bg-background px-4;
+  }
+  .plan-item {
+    @apply flex-row items-center py-[14px];
+  }
+  .plan-item--divided {
+    @apply border-b border-border;
+  }
+  .plan-item__icon {
+    @apply h-10 w-10 items-center justify-center rounded-[12px] bg-[#F1EEFF];
+  }
+  .plan-item__icon--coral {
+    @apply bg-[#FDECEF];
+  }
+  .plan-item__body {
+    @apply ml-4 flex-1;
+  }
+  .plan-item__check {
+    @apply h-[26px] w-[26px] items-center justify-center rounded-full border-2 border-border;
+  }
+  .plan-item__check--done {
+    @apply border-blue bg-blue;
+  }
 }

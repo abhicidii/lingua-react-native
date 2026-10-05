@@ -1,7 +1,13 @@
-import { Link } from "expo-router";
+import { useAuth } from "@clerk/expo";
+import { Link, Redirect } from "expo-router";
 import { Text, View } from "react-native";
 
 export default function Index() {
+  const { isLoaded, isSignedIn } = useAuth();
+
+  if (!isLoaded) return null;
+  if (!isSignedIn) return <Redirect href="/onboarding" />;
+
   return (
     <View className="screen items-center justify-center">
       <Text className="text text--h1">muolingo</Text>

@@ -1,4 +1,3 @@
-import { useRouter } from "expo-router";
 import { useState } from "react";
 import { KeyboardAvoidingView, Modal, Platform, Text, TextInput, View } from "react-native";
 
@@ -8,21 +7,26 @@ type Props = {
   visible: boolean;
   email: string;
   onClose: () => void;
+  // Returns an error message, or null when the code was accepted
+  onSubmit: (code: string) => Promise<string | null>;
 };
 
-export default function VerificationModal({ visible, email, onClose }: Props) {
-  const router = useRouter();
+export default function VerificationModal({ visible, email, onClose, onSubmit }: Props) {
   const [code, setCode] = useState("");
+  const [error, setError] = useState<string | null>(null);
 
-  const handleChange = (text: string) => {
+  const handleChange = async (text: string) => {
     const digits = text.replace(/\D/g, "").slice(0, CODE_LENGTH);
     setCode(digits);
+    setError(null);
 
-    // Last digit entered -> go home
+    // Last digit entered -> verify with Clerk
     if (digits.length === CODE_LENGTH) {
-      setCode("");
-      onClose();
-      router.replace("/");
+      const message = await onSubmit(digits);
+      if (message) {
+        setError(message);
+        setCode("");
+      }
     }
   };
 
@@ -62,6 +66,7 @@ export default function VerificationModal({ visible, email, onClose }: Props) {
               className="absolute h-full w-full opacity-0"
             />
           </View>
+          {error && <Text className="text text--body-md mt-4 text-center text-error">{error}</Text>}
         </View>
       </KeyboardAvoidingView>
     </Modal>

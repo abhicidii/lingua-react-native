@@ -1,3 +1,4 @@
+import { useSSO, useSignIn, useSignUp } from "@clerk/expo";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import { Image, ScrollView, Text, TextInput, TouchableOpacity, View } from "react-native";
@@ -31,9 +32,9 @@ const content = {
 } as const;
 
 const socialButtons = [
-  { label: "Continue with Google", icon: images.iconGoogle },
-  { label: "Continue with Facebook", icon: images.iconFacebook },
-  { label: "Continue with Apple", icon: null },
+  { label: "Continue with Google", icon: images.iconGoogle, strategy: "oauth_google" },
+  { label: "Continue with Facebook", icon: images.iconFacebook, strategy: "oauth_facebook" },
+  { label: "Continue with Apple", icon: null, strategy: "oauth_apple" },
 ] as const;
 
 export default function AuthForm({ mode }: Props) {
@@ -43,6 +44,57 @@ export default function AuthForm({ mode }: Props) {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [verifying, setVerifying] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const { signIn, fetchStatus: signInStatus } = useSignIn();
+  const { signUp, fetchStatus: signUpStatus } = useSignUp();
+  const { startSSOFlow } = useSSO();
+  const busy = signInStatus === "fetching" || signUpStatus === "fetching";
+
+  // Sign-up: email + password, then a code is emailed. Sign-in: a code is emailed.
+  const handleSubmit = async () => {
+    setError(null);
+    if (mode === "sign-up") {
+      const { error: createError } = await signUp.password({ emailAddress: email, password });
+      if (createError) return setError(createError.message);
+      const { error: sendError } = await signUp.verifications.sendEmailCode();
+      if (sendError) return setError(sendError.message);
+    } else {
+      const { error: sendError } = await signIn.emailCode.sendCode({ emailAddress: email });
+      if (sendError) return setError(sendError.message);
+    }
+    setVerifying(true);
+  };
+
+  // Opens the provider in a browser session. Cancelling returns no session, so we do nothing.
+  const handleSocial = async (strategy: (typeof socialButtons)[number]["strategy"]) => {
+    setError(null);
+    try {
+      const { createdSessionId, setActive } = await startSSOFlow({ strategy });
+      if (createdSessionId && setActive) {
+        await setActive({ session: createdSessionId });
+        router.replace("/");
+      }
+    } catch {
+      setError("Could not sign in with that provider. Please try again.");
+    }
+  };
+
+  const handleVerify = async (code: string) => {
+    const resource = mode === "sign-up" ? signUp : signIn;
+    const { error: verifyError } =
+      mode === "sign-up"
+        ? await signUp.verifications.verifyEmailCode({ code })
+        : await signIn.emailCode.verifyCode({ code });
+    if (verifyError) return verifyError.message;
+    if (resource.status !== "complete") return "Verification incomplete. Please try again.";
+
+    const { error: finalizeError } = await resource.finalize({
+      navigate: () => router.replace("/"),
+    });
+    if (finalizeError) return finalizeError.message;
+    setVerifying(false);
+    return null;
+  };
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
@@ -107,11 +159,17 @@ export default function AuthForm({ mode }: Props) {
           {/* Main button */}
           <TouchableOpacity
             activeOpacity={0.85}
-            onPress={() => setVerifying(true)}
+            onPress={handleSubmit}
+            disabled={busy || !email}
             className="button button--primary mt-3.5 h-[58px] rounded-[18px]"
           >
             <Text className="button__label text-[18px]">{copy.button}</Text>
           </TouchableOpacity>
+
+          {error && <Text className="text text--body-md mt-3 text-center text-error">{error}</Text>}
+
+          {/* Required by Clerk bot protection on sign-up */}
+          {mode === "sign-up" && <View nativeID="clerk-captcha" />}
 
           {/* Divider */}
           <View className="mt-5 flex-row items-center">
@@ -126,6 +184,7 @@ export default function AuthForm({ mode }: Props) {
               <TouchableOpacity
                 key={item.label}
                 activeOpacity={0.7}
+                onPress={() => handleSocial(item.strategy)}
                 className="mb-2.5 h-[54px] flex-row items-center rounded-[18px] border border-border"
               >
                 <View className="w-[70px] items-center">
@@ -155,7 +214,7 @@ export default function AuthForm({ mode }: Props) {
         </View>
       </ScrollView>
 
-      <VerificationModal visible={verifying} email={email} onClose={() => setVerifying(false)} />
+      <VerificationModal visible={verifying} email={email} onClose={() => setVerifying(false)} onSubmit={handleVerify} />
     </SafeAreaView>
   );
 }
